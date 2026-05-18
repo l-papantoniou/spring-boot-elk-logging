@@ -1,0 +1,48 @@
+spring:
+  application:
+    name: spring-boot-elk-logging
+    version: 0.0.1-SNAPSHOT
+  profiles:
+    active: dev
+
+  datasource:
+    url: jdbc:h2:mem:elklogdemo;DB_CLOSE_DELAY=-1
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: false
+  sql:
+    init:
+      mode: always
+
+server:
+  port: 8080
+  forward-headers-strategy: framework
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+
+# Our custom HTTP logging filter knobs (see LoggingProperties)
+logging:
+  http:
+    excluded-paths:
+      - /actuator
+      - /health
+      - /h2-console
+    log-body: false
+    max-body-size: 10000
