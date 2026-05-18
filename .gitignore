@@ -1,0 +1,47 @@
+# ===== Build output =====
+target/
+build/
+out/
+*.class
+*.jar
+*.war
+*.ear
+
+# ===== Maven wrapper internals (we DO commit the wrapper itself) =====
+.mvn/wrapper/maven-wrapper.jar
+
+# ===== Spring Boot dev tooling =====
+HELP.md
+.spring-boot-devtools.properties
+
+# ===== Log output (the app writes JSON logs here; we don't commit them) =====
+logs/*
+!logs/.gitkeep
+*.log
+*.log.gz
+
+# ===== Docker / Logstash runtime state =====
+docker/elasticsearch-data/
+docker/logstash-data/
+
+# ===== IDE: IntelliJ =====
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# ===== IDE: Eclipse / STS =====
+.classpath
+.project
+.settings/
+.factorypath
+.springBeans
+.sts4-cache
+
+# ===== IDE: VS Code =====
+.vscode/
+
+# ===== OS junk =====
+.DS_Store
+Thumbs.db
+desktop.ini

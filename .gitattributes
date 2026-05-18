@@ -1,0 +1,17 @@
+# Default: text files use LF, auto-detect rest
+* text=auto eol=lf
+
+# Shell scripts and Maven wrapper must always be LF
+*.sh    text eol=lf
+mvnw    text eol=lf
+
+# Windows-specific scripts stay CRLF
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+mvnw.cmd text eol=crlf
+
+# Treat these as binary
+*.jar   binary
+*.gz    binary
+*.png   binary
+*.jpg   binary
