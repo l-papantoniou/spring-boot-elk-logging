@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <!-- ══ Spring property bindings ════════════════════════════════════════ -->
+    <springProperty name="APP_NAME"       source="spring.application.name"                     defaultValue="application"/>
+    <springProperty name="APP_VERSION"    source="spring.application.version"                  defaultValue="unknown"/>
+    <springProperty name="ENVIRONMENT"    source="spring.profiles.active"                      defaultValue="default"/>
+    <springProperty name="LOG_DIR"        source="logging.http.log-dir"                        defaultValue="./logs"/>
+    <springProperty name="MAX_HISTORY"    source="logging.logback.rollingpolicy.max-history"   defaultValue="30"/>
+    <springProperty name="MAX_FILE_SIZE"  source="logging.logback.rollingpolicy.max-file-size" defaultValue="100MB"/>
+    <springProperty name="TOTAL_SIZE_CAP" source="logging.logback.rollingpolicy.total-size-cap" defaultValue="3GB"/>
+
+    <!-- ── FILE appender ──────────────────────────────────────────────────── -->
+    <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/${APP_NAME}.log</file>
+        <append>true</append>
+
+        <!-- Daily + size-based rotation with compressed archives -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/${APP_NAME}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>${MAX_FILE_SIZE}</maxFileSize>
+            <maxHistory>${MAX_HISTORY}</maxHistory>
+            <totalSizeCap>${TOTAL_SIZE_CAP}</totalSizeCap>
+            <cleanHistoryOnStart>true</cleanHistoryOnStart>
+        </rollingPolicy>
+
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- ISO-8601 with nanosecond precision and timezone offset -->
+            <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSSXXX</timestampPattern>
+
+            <!-- Rename built-in fields to ECS-friendly names where possible -->
+            <fieldNames>
+                <timestamp>@timestamp</timestamp>
+                <message>message</message>
+                <logger>log.logger</logger>
+                <thread>process.thread.name</thread>
+                <level>log.level</level>
+                <version>[ignore]</version>
+                <levelValue>[ignore]</levelValue>
+                <stackTrace>error.stack_trace</stackTrace>
+            </fieldNames>
+
+            <!-- Static service-level fields, written as nested JSON for ECS compliance -->
+            <customFields>{"service":{"name":"${APP_NAME}","version":"${APP_VERSION}","environment":"${ENVIRONMENT}"},"ecs":{"version":"8.11.0"}}</customFields>
+        </encoder>
+    </appender>
+
+    <!-- ── CONSOLE appender (dev / non-prod profiles only) ────────────────── -->
+    <springProfile name="!prod">
+        <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+            <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                <timestampPattern>yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSSXXX</timestampPattern>
+                <fieldNames>
+                    <timestamp>@timestamp</timestamp>
+                    <message>message</message>
+                    <logger>log.logger</logger>
+                    <thread>process.thread.name</thread>
+                    <level>log.level</level>
+                    <version>[ignore]</version>
+                    <levelValue>[ignore]</levelValue>
+                    <stackTrace>error.stack_trace</stackTrace>
+                </fieldNames>
+                <customFields>{"service":{"name":"${APP_NAME}","version":"${APP_VERSION}","environment":"${ENVIRONMENT}"},"ecs":{"version":"8.11.0"}}</customFields>
+            </encoder>
+        </appender>
+    </springProfile>
+
+    <!-- ══ Root loggers per profile ════════════════════════════════════════ -->
+
+    <!-- Production: file only -->
+    <springProfile name="prod">
+        <root level="INFO">
+            <appender-ref ref="JSON_FILE"/>
+        </root>
+    </springProfile>
+
+    <!-- Every other profile: file + console -->
+    <springProfile name="!prod">
+        <root level="INFO">
+            <appender-ref ref="JSON_FILE"/>
+            <appender-ref ref="JSON_CONSOLE"/>
+        </root>
+    </springProfile>
+
+</configuration>

@@ -1,0 +1,4 @@
+# This directory exists so docker-compose can mount it as a volume
+# even before the Spring Boot app has produced any log files.
+#
+# The logs themselves are gitignored (see .gitignore).

@@ -1,0 +1,35 @@
+{
+  "index_patterns": ["spring-logs-*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    },
+    "mappings": {
+      "dynamic_templates": [
+        {
+          "strings_as_keyword_and_text": {
+            "match_mapping_type": "string",
+            "mapping": {
+              "type": "text",
+              "fields": { "keyword": { "type": "keyword", "ignore_above": 1024 } }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "@timestamp":                       { "type": "date" },
+        "log.level":                        { "type": "keyword" },
+        "service.name":                     { "type": "keyword" },
+        "service.environment":              { "type": "keyword" },
+        "trace.id":                         { "type": "keyword" },
+        "labels.correlation_id":            { "type": "keyword" },
+        "http.request.method":              { "type": "keyword" },
+        "http.response.status_code":        { "type": "integer" },
+        "url.path":                         { "type": "keyword" },
+        "event.duration":                   { "type": "long" },
+        "client.ip":                        { "type": "ip" }
+      }
+    }
+  }
+}
