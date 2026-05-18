@@ -2,10 +2,6 @@
 
 > Centralized logging for Spring Boot with the **ELK stack** (Elasticsearch, Logstash, Kibana), structured JSON logs, distributed trace **and correlation** IDs propagated via MDC, and **ECS-compliant** field naming.
 
-[![Build](https://github.com/<your-github-username>/spring-boot-elk-logging/actions/workflows/build.yml/badge.svg)](https://github.com/<your-github-username>/spring-boot-elk-logging/actions/workflows/build.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5.x-brightgreen)](https://spring.io/projects/spring-boot)
-[![Java](https://img.shields.io/badge/Java-21-orange)](https://openjdk.org/projects/jdk/21/)
 
 This is the companion project to the Medium article **["Centralized Logging: Spring Boot Meets Elasticsearch, Logstash, and Kibana"](#)**. The repo and the article are designed to be read together — the article explains *why* each piece looks the way it does; the repo is the working code you can run end-to-end.
 
@@ -13,12 +9,12 @@ This is the companion project to the Medium article **["Centralized Logging: Spr
 
 ## What it demonstrates
 
-- 📝 **Structured JSON logging** via `logstash-logback-encoder`
-- 🧵 **Trace & correlation ID propagation** through SLF4J **MDC** — every log line in a request automatically carries the same `traceId` and `correlationId` (reused from the `X-Trace-Id` / `X-Correlation-Id` request headers if present, otherwise generated, and echoed back on the response), no plumbing needed in service code
-- 🌐 **Inbound HTTP exchange logging** (method, URL, query, status, duration, client IP, request/response headers, and optional bodies for loggable content-types)
-- 🔁 **ECS field naming in two layers** — the Logback encoder renames its built-in fields (`logger` → `log.logger`, `level` → `log.level`, stack traces → `error.stack_trace`, …) via `<fieldNames>`; Logstash then renames the remaining flat app fields to nested **ECS** paths (e.g. `http.method` → `http.request.method`, `correlationId` → `labels.correlation_id`)
-- 🗄️ **Elasticsearch index template** with sensible default mappings (keyword fields, `ip` type, `long` duration)
-- 🔎 **Kibana Discover** + KQL queries for fast log exploration
+- **Structured JSON logging** via `logstash-logback-encoder`
+- **Trace & correlation ID propagation** through SLF4J **MDC** — every log line in a request automatically carries the same `traceId` and `correlationId` (reused from the `X-Trace-Id` / `X-Correlation-Id` request headers if present, otherwise generated, and echoed back on the response), no plumbing needed in service code
+- **Inbound HTTP exchange logging** (method, URL, query, status, duration, client IP, request/response headers, and optional bodies for loggable content-types)
+- **ECS field naming in two layers** — the Logback encoder renames its built-in fields (`logger` → `log.logger`, `level` → `log.level`, stack traces → `error.stack_trace`, …) via `<fieldNames>`; Logstash then renames the remaining flat app fields to nested **ECS** paths (e.g. `http.method` → `http.request.method`, `correlationId` → `labels.correlation_id`)
+- **Elasticsearch index template** with sensible default mappings (keyword fields, `ip` type, `long` duration)
+- **Kibana Discover** + KQL queries for fast log exploration
 
 ---
 
@@ -186,51 +182,5 @@ spring-boot-elk-logging/
 5. Logstash tails the file, lifts the JSON, **renames the remaining flat fields to ECS paths**, converts numeric types, and POSTs to Elasticsearch.
 6. Kibana reads from Elasticsearch and lets you query via KQL.
 
-The full reasoning behind each piece — particularly **what MDC is and why it matters**, and the `ContentCachingRequestWrapper` gotcha — is in the [companion Medium article](#).
-
 ---
 
-## Troubleshooting
-
-**Elasticsearch container exits immediately**
-On Linux, you may need to raise the `vm.max_map_count` kernel limit:
-```bash
-sudo sysctl -w vm.max_map_count=262144
-```
-
-**No logs showing up in Kibana**
-1. Check the app is writing to `./logs/`: `ls -la logs/`
-2. Tail Logstash to see if it's picking up the file:
-   ```bash
-   docker compose logs -f logstash
-   ```
-   You should see the parsed events printed by the `stdout` debug output we left in the pipeline.
-3. Verify the index exists:
-   ```bash
-   curl http://localhost:9200/_cat/indices/spring-logs-*?v
-   ```
-
-**Logstash says `Permission denied` reading the log file**
-Make sure the `./logs` directory is readable by the Logstash container. On some systems you may need `chmod 755 logs/`.
-
-**Kibana says "No data views"**
-You haven't created one yet — see step 6 of the Quick Start above.
-
----
-
-## What this repo is *not*
-
-This is a **learning project** — deliberately kept minimal. Production deployments should add:
-
-- **OpenTelemetry / Micrometer Tracing** to replace the hand-rolled `X-Trace-Id` with W3C `traceparent`
-- **Filebeat** as a lightweight collector in front of Logstash
-- **Elasticsearch security** (auth, TLS) — disabled here for demo simplicity
-- **Index Lifecycle Management (ILM)** for retention tiers (hot/warm/cold)
-- **Sensitive-data scrubbing** — the filter logs **all** request/response headers by default (including `Authorization` and `Cookie`); mask these and any PII in the Logstash filter stage before production
-- **Dashboards and alerting rules** in Kibana
-
----
-
-## License
-
-MIT — see [LICENSE](LICENSE).
